@@ -20,3 +20,5 @@ func main() {
 
 	ebiten.RunGame(&g)
 }
+
+// 양태빈 멍청이
