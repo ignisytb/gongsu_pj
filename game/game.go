@@ -10,52 +10,43 @@ import (
 type Game struct {
 	ScreenHeight int
 	ScreenWidth  int
+	Unit         int
 	Sprites      []*sprite.Sprites
 }
 
 func (g *Game) Update() error {
-	Player := g.Sprites[0]
-	if ebiten.IsKeyPressed(ebiten.KeyW) && Player.TouchFloor {
-		if Player.JumpCount == 0 {
-			Player.JumpCount = 13
-			Player.Vl = 1000
-			Player.Move(0, float64(Player.JumpCount))
-			Player.Vl = 10
-		} else if Player.JumpCount == 1 {
-			Player.TouchFloor = false
-			Player.JumpCount = 0
-		} else {
-			Player.JumpCount -= 1
-			Player.Vl = 1000
-			Player.Move(0, float64(Player.JumpCount))
-			Player.Vl = 10
-		}
-	} else if Player.JumpCount != 0 {
-		Player.JumpCount = 0
-		Player.TouchFloor = false
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		Player.Move_Vel(-5, Player.Vy)
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		Player.Move_Vel(5, Player.Vy)
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeySpace) && !Player.TouchFloor {
-		Player.Vl = 1000
-		Player.Move(0, -40)
-		Player.Vl = 10
-	}
-
-	Player.Render()
-	for _, sp := range g.Sprites {
-		if sp.Gravity {
-			sp.Move(0, -2)
+	player := g.Sprites[0]
+	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyUp) {
+		player.Y -= player.CharSpd
+		if player.Coll(g.Sprites[1]) {
+			player.Y += player.CharSpd
 		}
 	}
-	Player.Coll_wall(g.ScreenWidth, g.ScreenHeight)
+	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyLeft) {
+		player.X -= player.CharSpd
+		if player.Coll(g.Sprites[1]) {
+			player.X += player.CharSpd
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyDown) {
+		player.Y += player.CharSpd
+		if player.Coll(g.Sprites[1]) {
+			player.Y -= player.CharSpd
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyRight) {
+		player.X += player.CharSpd
+		if player.Coll(g.Sprites[1]) {
+			player.X -= player.CharSpd
+		}
+	}
 
+	if player.X < (-player.Unit / 2) {
+		player.X = g.ScreenWidth + (player.Unit / 2)
+	}
+	if player.X > g.ScreenWidth+(player.Unit/2) {
+		player.X = (-player.Unit / 2)
+	}
 	return nil
 }
 
@@ -63,7 +54,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.White)
 
 	for _, sp := range g.Sprites {
-		sp.Draw(screen)
+		if !sp.Plable {
+			sp.Draw(screen)
+		}
+	}
+	for _, sp := range g.Sprites {
+		if sp.Plable {
+			sp.Draw(screen)
+		}
 	}
 }
 

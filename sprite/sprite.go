@@ -1,94 +1,66 @@
 package sprite
 
 import (
-	"fmt"
-	"math"
+	"eng/draw"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Sprites struct {
-	Img        *ebiten.Image
-	Rot, Scale float64
-	X, Y       float64
-	Vx, Vy     float64
-	Vl         float64
-	Gravity    bool
-	TouchFloor bool
-	JumpCount  int
-	Friction   float64
+	X, Y, Unit int
+	C          color.Color
+	Plable     bool
+	Hitmap     *MapAr
+	CharSpd    int
 }
 
-func (sp *Sprites) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	scale := sp.Scale
-	op.GeoM.Scale(scale, scale)
-	op.GeoM.Translate(float64(sp.X)-float64(sp.Img.Bounds().Size().X/2)*scale, float64(sp.Y)-float64(sp.Img.Bounds().Size().Y/2)*scale)
-	op.GeoM.Rotate(math.Pi * float64(sp.Rot) / 180)
-
-	screen.DrawImage(sp.Img, op)
-}
-
-func (sp *Sprites) Move(Ax, Ay float64) {
-	sp.Vx += Ax
-	sp.Vy += Ay
-	if sp.Vx > sp.Vl {
-		sp.Vx = sp.Vl
-	}
-	if sp.Vx < -sp.Vl {
-		sp.Vx = -sp.Vl
-	}
-	if sp.Vy > sp.Vl {
-		sp.Vy = sp.Vl
-	}
-	if sp.Vy < -sp.Vl {
-		sp.Vy = -sp.Vl
+func (s *Sprites) Draw(screen *ebiten.Image) {
+	offset_x, offset_y := int(len(s.Hitmap.Mesh[0])*s.Unit/2), int(len(s.Hitmap.Mesh)*s.Unit/2)
+	for i := range s.Hitmap.Mesh[0] {
+		for j := range s.Hitmap.Mesh {
+			if s.Hitmap.Mesh[j][i] {
+				draw.DrawRectangle(i*s.Unit+s.X-offset_x, j*s.Unit+s.Y-offset_y, s.Unit, s.Unit, s.C, screen)
+			}
+		}
 	}
 }
 
-func (sp *Sprites) Move_Vel(Vx, Vy float64) {
-	sp.Vx = Vx
-	sp.Vy = Vy
-}
-
-func (sp *Sprites) Render() {
-	sp.X += sp.Vx
-	sp.Y -= sp.Vy
-	if sp.Vx > 0 {
-		sp.Vx -= 0.4
-	} else if sp.Vx < 0 {
-		sp.Vx += 0.4
+func (s *Sprites) Coll_Point(x, y int) bool {
+	i, j := x/s.Unit, y/s.Unit
+	if i < 0 {
+		i = 0
 	}
-	if sp.Vy > 0 {
-		sp.Vy -= sp.Friction
-	} else if sp.Vy < 0 {
-		sp.Vy += sp.Friction
+	if i > (len(s.Hitmap.Mesh[0]) - 1) {
+		i = len(s.Hitmap.Mesh[0]) - 1
 	}
-}
-
-func (sp *Sprites) Coll_wall(Width, Height int) {
-	if float64(sp.X)-float64(sp.Img.Bounds().Size().X/2)*sp.Scale < 0 {
-		sp.X = (float64(sp.Img.Bounds().Size().X/2) * sp.Scale)
+	if j < 0 {
+		j = 0
 	}
-	if float64(sp.Y)-float64(sp.Img.Bounds().Size().Y/2)*sp.Scale < 0 {
-		sp.Y = (float64(sp.Img.Bounds().Size().Y/2) * sp.Scale)
+	if j > (len(s.Hitmap.Mesh) - 1) {
+		j = len(s.Hitmap.Mesh) - 1
 	}
-	if float64(sp.X)+float64(sp.Img.Bounds().Size().X/2)*sp.Scale > float64(Width) {
-		sp.X = float64(Width) - (float64(sp.Img.Bounds().Size().X/2) * sp.Scale)
-	}
-	if float64(sp.Y)+float64(sp.Img.Bounds().Size().Y/2)*sp.Scale > float64(Height) {
-		sp.Y = float64(Height) - (float64(sp.Img.Bounds().Size().Y/2) * sp.Scale)
-		sp.TouchFloor = true
+	if s.Hitmap.Mesh[j][i] {
+		return true
+	} else {
+		return false
 	}
 }
 
-func Shaker(x, y, rot float64) *Sprites {
-	img, _, err := ebitenutil.NewImageFromFile("sprite/shaker.png")
-	if err != nil {
-		fmt.Print("[DRAW/Shaker] shaker image loading error\n")
+func (s *Sprites) Coll(oth *Sprites) bool {
+	offset_x, offset_y := int(len(s.Hitmap.Mesh[0])*s.Unit/2), int(len(s.Hitmap.Mesh)*s.Unit/2)
+	for i := range len(s.Hitmap.Mesh[0]) {
+		for j := range len(s.Hitmap.Mesh) {
+			for k := range s.Unit {
+				for l := range s.Unit {
+					if s.Hitmap.Mesh[j][i] {
+						if oth.Coll_Point(i*s.Unit+k+s.X-offset_x, j*s.Unit+l+s.Y-offset_y) {
+							return true
+						}
+					}
+				}
+			}
+		}
 	}
-	scale := 0.1
-
-	return &Sprites{Img: img, X: x, Y: y, Vx: 0, Vy: 0, Vl: 10, Rot: rot, Scale: scale, Gravity: true, TouchFloor: false, Friction: 0.5}
+	return false
 }
