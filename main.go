@@ -14,11 +14,11 @@ func main() {
 	th_x, th_y := []float64{15, 555}, []float64{285, 285}
 	sp_x, sp_y := []float64{46, 524, 46, 524}, []float64{46, 46, 524, 524}
 
-	gmp := &sprite.Sprites{Unit: unit, C: color.Black, Hitmap: &sprite.MapAr{}}
+	gmp := &sprite.Sprites{Motion: &sprite.Motion{}, Unit: unit, C: color.Black, Hitmap: &sprite.MapAr{}}
 	gmp.Hitmap.Load_file("sprite/gamemap.txt")
 
 	width, height := gmp.Hitmap.Size()
-	gmp.X, gmp.Y = float64(width*unit)/2, float64(height*unit)/2
+	gmp.Motion.X, gmp.Motion.Y = float64(width*unit)/2, float64(height*unit)/2
 
 	ebiten.SetWindowSize(width*unit, height*unit)
 	ebiten.SetWindowTitle("PPAP MAN")
@@ -35,24 +35,25 @@ func main() {
 	}
 
 	police := sprite.Player(unit - 1)
-	police.X = float64(po_x)
-	police.Y = float64(po_y)
+	police.Motion.X = float64(po_x)
+	police.Motion.Y = float64(po_y)
 	police.C = color.RGBA{0, 0, 255, 100}
-	police.CharSpd = 1.5
+	police.Motion.MaxSpd = 1.5
 	g.Sprites = append(g.Sprites, police)
 
 	for i := 0; i < n_th; i++ {
 		th := sprite.Player(unit - 1)
-		th.X = th_x[i]
-		th.Y = th_y[i]
+		th.Motion.X = th_x[i]
+		th.Motion.Y = th_y[i]
+		th.Motion.MaxSpd = 2
 		th.C = color.RGBA{255, 0, 0, 200}
 		g.Sprites = append(g.Sprites, th)
 	}
 
 	for i := 0; i < n_sp; i++ {
 		sp := sprite.Player(unit - 2)
-		sp.X = sp_x[i]
-		sp.Y = sp_y[i]
+		sp.Motion.X = sp_x[i]
+		sp.Motion.Y = sp_y[i]
 		sp.C = color.RGBA{100, 100, 100, 200}
 		g.Sprites = append(g.Sprites, sp)
 	}

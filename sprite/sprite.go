@@ -9,92 +9,88 @@ import (
 )
 
 type Sprites struct {
-	Unit          int
-	X, Y, CharSpd float64
-	C             color.Color
-	Plable        bool
-	Hitmap        *MapAr
-	Jail_Ent      time.Time
+	Unit     int
+	Motion   *Motion
+	C        color.Color
+	Plable   bool
+	Hitmap   *MapAr
+	Jail_Ent time.Time
 }
 
 func (s *Sprites) Police_Move(wall *Sprites) bool {
-	move := false
+	mov := false
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		s.Y -= s.CharSpd
+		s.Motion.Y -= s.Motion.MaxSpd
+		mov = true
 		if s.Coll(wall) {
-			s.Y += s.CharSpd
-		} else {
-			move = true
+			s.Motion.Y += s.Motion.MaxSpd
+			mov = false
 		}
 	}
-
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		s.Y += s.CharSpd
+		s.Motion.Y += s.Motion.MaxSpd
+		mov = true
 		if s.Coll(wall) {
-			s.Y -= s.CharSpd
-		} else {
-			move = true
+			s.Motion.Y -= s.Motion.MaxSpd
+			mov = false
 		}
 	}
-
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		s.X -= s.CharSpd
+		s.Motion.X -= s.Motion.MaxSpd
+		mov = true
 		if s.Coll(wall) {
-			s.X += s.CharSpd
-		} else {
-			move = true
+			s.Motion.X += s.Motion.MaxSpd
+			mov = false
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyRight) {
+		s.Motion.X += s.Motion.MaxSpd
+		mov = true
+		if s.Coll(wall) {
+			s.Motion.X -= s.Motion.MaxSpd
+			mov = false
 		}
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		s.X += s.CharSpd
-		if s.Coll(wall) {
-			s.X -= s.CharSpd
-		} else {
-			move = true
-		}
-	}
-	return move
+	return mov
 }
 
 func (s *Sprites) Thief_Move(wall *Sprites) bool {
-	move := false
+	mov := false
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		s.Y -= s.CharSpd
+		s.Motion.Y -= s.Motion.MaxSpd
+		mov = true
 		if s.Coll(wall) {
-			s.Y += s.CharSpd
-		} else {
-			move = true
+			s.Motion.Y += s.Motion.MaxSpd
+			mov = false
 		}
 	}
-
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
-		s.Y += s.CharSpd
+		s.Motion.Y += s.Motion.MaxSpd
+		mov = true
 		if s.Coll(wall) {
-			s.Y -= s.CharSpd
-		} else {
-			move = true
+			s.Motion.Y -= s.Motion.MaxSpd
+			mov = false
 		}
 	}
-
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		s.X -= s.CharSpd
+		s.Motion.X -= s.Motion.MaxSpd
+		mov = true
 		if s.Coll(wall) {
-			s.X += s.CharSpd
-		} else {
-			move = true
+			s.Motion.X += s.Motion.MaxSpd
+			mov = false
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		s.Motion.X += s.Motion.MaxSpd
+		mov = true
+		if s.Coll(wall) {
+			s.Motion.X -= s.Motion.MaxSpd
+			mov = false
 		}
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		s.X += s.CharSpd
-		if s.Coll(wall) {
-			s.X -= s.CharSpd
-		} else {
-			move = true
-		}
-	}
-	return move
+	return mov
 }
 
 func (s *Sprites) Draw(screen *ebiten.Image) {
@@ -102,7 +98,7 @@ func (s *Sprites) Draw(screen *ebiten.Image) {
 	for i := 0; i < len(s.Hitmap.Mesh[0]); i++ {
 		for j := 0; j < len(s.Hitmap.Mesh); j++ {
 			if s.Hitmap.Mesh[j][i] {
-				draw.DrawRectangle(int(s.X-offset_x)+i*s.Unit, int(s.Y-offset_y)+j*s.Unit, s.Unit, s.Unit, s.C, screen)
+				draw.DrawRectangle(int(s.Motion.X-offset_x)+i*s.Unit, int(s.Motion.Y-offset_y)+j*s.Unit, s.Unit, s.Unit, s.C, screen)
 			}
 		}
 	}
@@ -110,7 +106,7 @@ func (s *Sprites) Draw(screen *ebiten.Image) {
 
 func (s *Sprites) Coll_Point(x, y float64) bool {
 	offset_x, offset_y := float64(len(s.Hitmap.Mesh[0])*s.Unit/2), float64(len(s.Hitmap.Mesh)*s.Unit/2)
-	x_s, y_s := s.X-offset_x, s.Y-offset_y
+	x_s, y_s := s.Motion.X-offset_x, s.Motion.Y-offset_y
 
 	i, j := (x-x_s)/float64(s.Unit), (y-y_s)/float64(s.Unit)
 
@@ -123,7 +119,7 @@ func (s *Sprites) Coll_Point(x, y float64) bool {
 
 func (s *Sprites) Coll(oth *Sprites) bool {
 	offset_x, offset_y := float64(len(s.Hitmap.Mesh[0])*s.Unit/2), float64(len(s.Hitmap.Mesh)*s.Unit/2)
-	x_s, y_s := s.X-offset_x, s.Y-offset_y
+	x_s, y_s := s.Motion.X-offset_x, s.Motion.Y-offset_y
 
 	for i := 0; i < len(s.Hitmap.Mesh[0]); i++ {
 		for j := 0; j < len(s.Hitmap.Mesh); j++ {

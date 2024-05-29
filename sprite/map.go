@@ -45,5 +45,5 @@ func Player(s int) *Sprites {
 
 	ret.Mesh = [][]bool{{true}}
 
-	return &Sprites{X: 0, Y: 0, Unit: s, C: color.CMYK{100, 200, 30, 30}, Hitmap: ret, Plable: true, CharSpd: 2}
+	return &Sprites{Motion: &Motion{X: 0, Y: 0}, Unit: s, C: color.CMYK{100, 200, 30, 30}, Hitmap: ret, Plable: true}
 }
