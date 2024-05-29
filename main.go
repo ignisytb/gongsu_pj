@@ -3,46 +3,59 @@ package main
 import (
 	"eng/game"
 	"eng/sprite"
-	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func main() {
+	unit, n_th, n_sp := 30, 2, 4
+	po_x, po_y := 285, 225
+	th_x, th_y := []float64{15, 555}, []float64{285, 285}
+	sp_x, sp_y := []float64{46, 524, 46, 524}, []float64{46, 46, 524, 524}
 
-	Unit := 30
-	init_X, init_Y := 225, 225
+	gmp := &sprite.Sprites{Unit: unit, C: color.Black, Hitmap: &sprite.MapAr{}}
+	gmp.Hitmap.Load_file("sprite/gamemap.txt")
 
-	sp_map := &sprite.MapAr{}
-	sp_map.Load_file("sprite/gamemap.txt")
+	width, height := gmp.Hitmap.Size()
+	gmp.X, gmp.Y = float64(width*unit)/2, float64(height*unit)/2
 
-	Width, Height := sp_map.Size()
-	Width *= Unit
-	Height *= Unit
-	fmt.Printf("Window Size: %v %v\n", Width, Height)
+	ebiten.SetWindowSize(width*unit, height*unit)
+	ebiten.SetWindowTitle("PPAP MAN")
 
-	sp := sprite.Sprites{
-		X:      int(Width / 2),
-		Y:      int(Height / 2),
-		Unit:   Unit,
-		C:      color.Black,
-		Hitmap: sp_map,
-		Plable: false,
+	g := &game.Game{
+		GameOver:     false,
+		ScreenWidth:  width * unit,
+		ScreenHeight: height * unit,
+		Unit:         unit,
+		Current_Ply:  1,
+		Num_Thief:    n_th,
+		Num_Sp:       n_sp,
+		Sprites:      []*sprite.Sprites{gmp},
 	}
 
-	player := sprite.Player(Unit - 1)
-	player.X, player.Y = init_X, init_Y
+	police := sprite.Player(unit - 1)
+	police.X = float64(po_x)
+	police.Y = float64(po_y)
+	police.C = color.RGBA{0, 0, 255, 100}
+	police.CharSpd = 1.5
+	g.Sprites = append(g.Sprites, police)
 
-	ebiten.SetWindowSize(Width, Height)
-	ebiten.SetWindowTitle("Shaker JUMP")
-
-	g := game.Game{
-		ScreenHeight: Height,
-		ScreenWidth:  Width,
-		Unit:         Unit,
-		Sprites:      []*sprite.Sprites{player, &sp},
+	for i := 0; i < n_th; i++ {
+		th := sprite.Player(unit - 1)
+		th.X = th_x[i]
+		th.Y = th_y[i]
+		th.C = color.RGBA{255, 0, 0, 200}
+		g.Sprites = append(g.Sprites, th)
 	}
 
-	ebiten.RunGame(&g)
+	for i := 0; i < n_sp; i++ {
+		sp := sprite.Player(unit - 2)
+		sp.X = sp_x[i]
+		sp.Y = sp_y[i]
+		sp.C = color.RGBA{100, 100, 100, 200}
+		g.Sprites = append(g.Sprites, sp)
+	}
+
+	ebiten.RunGame(g)
 }
